@@ -15,6 +15,8 @@
 }
 
 #mw-container {
+  --wheelSize: min(80vmin, 720px);
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -25,10 +27,8 @@
 
 /* --- WHEEL SIZE & LAYOUT --- */
 svg#wheel {
-  width: 80vmin;
-  max-width: 720px;
-  height: 80vmin;
-  max-height: 720px;
+  width: var(--wheelSize);
+  height: var(--wheelSize);
   display: block;
   user-select: none;
   touch-action: none;
@@ -48,14 +48,14 @@ svg#wheel {
   fill: url(#stoneGrad);
   stroke: #171717;
   stroke-width: 3;
-  filter: drop-shadow(0 8px 18px rgba(0, 0, 0, 0.7));
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.4));
 }
 
 .note-circle {
   fill: #1b1b1c;
   stroke: #444;
   stroke-width: 3;
-  filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.6));
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.35));
 }
 
 .note-label {
@@ -66,17 +66,20 @@ svg#wheel {
 
 /* --- Color spokes --- */
 .spoke {
-  stroke-width: 6;
-  vector-effect: non-scaling-stroke;
+  stroke-width: 4 !important;
   opacity: 0;
-  transition: opacity 0.2s ease;
+  filter: none !important;
+}
+
+.spoke.on {
+  opacity: 0.9 !important;
 }
 .spoke.on { opacity: 1; }
 
 .center {
-  fill: #111;
-  stroke: #3b3b3b;
-  stroke-width: 3;
+  fill: rgba(5,5,7, 1) !important;
+  stroke: rgba(255,255,255,0.12) !important;
+  stroke-width: 2 !important;
 }
 
 /* --- Interval Ring --- */
@@ -91,7 +94,7 @@ svg#wheel {
 .interval-wedge.active {
   fill: #ffffff55;
   stroke: #eee;
-  filter: drop-shadow(0 0 12px #fff);
+  filter: drop-shadow(0 0 4px rgba(255,255,255,0.4));
 }
 .interval-label {
   fill: #ffffff;
@@ -277,47 +280,35 @@ svg#wheel {
 
 /* ===== MOBILE: 7 tiles centered, desktop look preserved ===== */
 @media (max-width: 768px) {
-  /* Tighter tile grid on small phones (SE width ~375px) */
+  /* Pick a tile width that fits 7 across on small phones (SE width ~375px) */
   #key-rows {
     display: grid;
     grid-template-columns: repeat(7, 13.5vw);  /* ~50–52px per tile on small screens */
-    column-gap: 2px;
+    column-gap: 3px;
     row-gap: 1px;
 
-    justify-content: center;
-    justify-items: stretch;
+    /* Center the whole grid */
+    justify-content: center;   /* centers the columns block */
+    justify-items: stretch;    /* tile fills its cell */
     align-items: stretch;
 
     width: 100%;
-    margin: 2px auto 0 auto;
+    margin: 2px auto 0 auto;   /* center container */
   }
 
   .mode-tile {
+    /* keep desktop style but remove internal extra space */
     min-width: 0;
     max-width: none;
-    gap: 1px;
-    padding: 1px 0;
+    gap: 2px;
+    padding: 2px 0;
   }
 
-  /* Shared button tweaks (tighter tiles) */
   .mode-tile .key-btn {
-    margin: 1px 0;
-    padding: 2px 3px;
-    border-radius: 7px;
-  }
-
-  /* Roman numerals: slightly larger + bold */
-  .mode-tile .roman-btn{
-    font-size: 0.70rem;
-    font-weight: 700;
-    letter-spacing: 0.2px;
-  }
-
-  /* Mode names: slightly larger + bold */
-  .mode-tile .key-name{
-    font-size: 0.65rem;
-    font-weight: 700;
-    letter-spacing: 0.1px;
+    margin: 2px 0;
+    padding: 3px 4px;
+    font-size: 0.55rem;  /* small so names fit */
+    border-radius: 8px;
   }
 }
 
@@ -328,7 +319,7 @@ svg#wheel {
 }
 @keyframes pulseOnce {
   0% { opacity: 0; filter: drop-shadow(0 0 0 rgba(255,255,255,0)); }
-  20% { opacity: 1; filter: drop-shadow(0 0 18px rgba(255,255,255,0.95)); }
+  20% { opacity: 1; filter: drop-shadow(0 0 6px rgba(255,255,255,0.5)); }
   100% { opacity: 0; filter: drop-shadow(0 0 0 rgba(255,255,255,0)); }
 }
 
@@ -375,16 +366,25 @@ svg#wheel {
 }
 
 #family-display,
+#mode-display,
+#key-display,
 #notes-display {
-  min-width: 78px;             /* a touch wider for desktop polish */
   text-align: center;
   font-weight: 600;
-  padding: 4px 8px;
+  padding: 4px 10px;
   border-radius: 6px;
   background: #0f0f0f;
   border: 1px solid #333;
   box-shadow: inset 0 0 10px rgba(255,255,255,0.04);
 }
+
+/* Proportions */
+#notes-display { width: 44px; padding: 4px 10px; }
+#key-display   { width: 68px; padding: 4px 10px; white-space: nowrap; }  /* fixed width to prevent arrow jump */
+/* extra breathing room for natural keys */
+#family-display,
+#mode-display  { min-width: 88px; }
+
 
 #index-input {
   background: #111;
@@ -398,9 +398,50 @@ svg#wheel {
   box-shadow: inset 0 0 6px rgba(255,255,255,0.06);
 }
 
+#reset-wheel {
+  background: #222;
+  border: 1px solid #555;
+  color: #fff;
+  border-radius: 6px;
+  width: 26px;
+  height: 26px;
+  font-size: 16px;
+  line-height: 24px;
+  cursor: pointer;
+  box-shadow: 0 0 6px rgba(255,255,255,0.08),
+              inset 0 0 6px rgba(255,255,255,0.06);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+#reset-wheel:active {
+  transform: translateY(1px);
+}
+
 /* Mobile tightening */
 @media (max-width: 768px) {
-  #mode-controls { gap: 16px; }
+  #mode-controls { gap: 14px; }
+
+  #mode-controls{
+    display: grid;
+    grid-template-columns: max-content max-content;
+    gap: 10px 14px;
+    justify-content: center;
+    align-items: start;
+  }
+  #mode-controls .control-group:last-child{ grid-column: 1 / -1; }
+
+  .control-label { font-size: 12px; }
+  .control-group button{ width: 24px; height: 24px; font-size: 16px; line-height: 22px; }
+
+  #notes-display { width: 44px; padding: 3px 8px; }
+  #key-display   { width: 58px; padding: 3px 8px; white-space: nowrap; }
+  #family-display, #mode-display { min-width: 88px; padding: 3px 8px; }
+  #index-input { width: 74px; height: 24px; font-size: 13px; }
+}
+
   .control-label { font-size: 12px; }
   .control-group button {
     width: 24px; height: 24px; font-size: 16px;
@@ -411,6 +452,15 @@ svg#wheel {
   #index-input { width: 66px; height: 24px; font-size: 13px; }
 }
 
+
+
+/* Stronger glow for note circles when played */
+circle.note-circle.glow-active{
+  stroke: var(--glow-color, #ffffff) !important;
+  stroke-width: 4px !important;
+  filter:
+    drop-shadow(0 0 3px var(--glow-color, #ffffff));
+}
 
 /* --- Glow + Spoke Effects --- */
 .glow-active {
@@ -532,3 +582,1955 @@ text.note-label.glow-active {
 #mw-container button, #mw-container input {
   touch-action: manipulation;
 }
+
+
+/* Tandem rotation grab points (transparent hitboxes at spoke ends) */
+.dual-rotate-handle{
+  /* iOS Safari: needs a non-zero fill for touch hit-testing */
+  fill: rgba(0,0,0,0.02);
+  stroke: rgba(0,0,0,0.0);
+  stroke-width: 18; /* expands hit area invisibly */
+  pointer-events: all;
+  cursor: grab;
+  touch-action: none;
+}
+.dual-rotate-handle:active{ cursor: grabbing; }
+
+
+/* --- Desktop Scale Info Panel --- */
+#mw-container{
+  position: relative; /* anchor for absolutely-positioned panel */
+}
+
+/* Keep wheel centered; panel floats on the right without affecting layout */
+#mw-toprow{
+  position: relative;
+  width: 100%;
+}
+
+#mw-toprow > #wheel{
+  display: block;
+  margin: 0 auto;
+}
+
+#scale-info-panel{
+  position: absolute;
+  z-index: 5;
+  top: 6px;
+  left: calc(50% + (var(--wheelSize) / 2) + 16px);
+
+  width: 260px;
+  max-width: 34vw;
+  padding: 12px 12px 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.18);
+  background: rgba(0,0,0,0.18);
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,0.35);
+  user-select: none;
+}
+
+.sip-header{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.sip-title{
+  font-size: 15px;
+  letter-spacing: 0.2px;
+  line-height: 1.2;
+}
+
+#sip-toggle{
+  width: 26px;
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 7px;
+  border: 1px solid rgba(255,255,255,0.20);
+  background: rgba(0,0,0,0.18);
+  color: rgba(255,255,255,0.92);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+#sip-toggle:active{ transform: translateY(1px); }
+
+/* Collapsible panel body */
+#sip-body{
+  margin-top: 10px;
+  display: grid;
+  gap: 12px;
+}
+#sip-body[hidden]{ display: none !important; }
+
+.sip-label{
+  font-size: 12px;
+  opacity: 0.86;
+  margin-bottom: 6px;
+}
+
+.sip-mono{
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 13px;
+  letter-spacing: 0.3px;
+  opacity: 0.95;
+}
+
+.sip-hist{
+  display: grid;
+  gap: 7px;
+}
+
+.sip-row{
+  display: grid;
+  grid-template-columns: 64px 26px 1fr;
+  align-items: center;
+  gap: 6px;
+}
+
+.sip-ic{
+  font-size: 12px;
+  opacity: 0.9;
+}
+
+.sip-count{
+  font-size: 12px;
+  text-align: right;
+  opacity: 0.9;
+}
+
+.sip-bar{
+  height: 8px;
+  border-radius: 6px;
+  background: rgba(255,255,255,0.10);
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.10);
+}
+
+.sip-bar > span{
+  display: block;
+  height: 100%;
+  width: 0%;
+  background: rgba(255,255,255,0.35);
+}
+
+/* Hide desktop scale info panel on smaller screens.
+   The panel is absolutely positioned to the right of the wheel on desktop;
+   on mobile it can peek in from the edge unless it is fully removed. */
+@media (max-width: 900px){
+  #scale-info-panel{
+    display: none !important;
+  }
+}
+
+
+/* Spelling buttons */
+.sip-spelling-row{
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+.sip-spelling-label{
+  font-size: 12px;
+  opacity: 0.86;
+}
+.sip-spell-btns{
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 5px;
+  width: 100%;
+}
+
+.sip-interval-row{
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+.sip-interval-btns{
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 5px;
+  width: 100%;
+}
+#sip-interval-display{
+  margin-top: 2px;
+}
+
+.sip-btn{
+  padding: 4px 7px;
+  border-radius: 9px;
+  border: 1px solid rgba(255,255,255,0.18);
+  background: rgba(0,0,0,0.16);
+  color: rgba(255,255,255,0.92);
+  font-size: 12px;
+  line-height: 1;
+  cursor: pointer;
+}
+.sip-btn.active{
+  background: rgba(255,255,255,0.10);
+  border-color: rgba(255,255,255,0.32);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.16), inset 0 0 0 1px rgba(0,0,0,0.35);
+  transform: translateY(1px);
+}
+
+/* Enharmonic spelling toggle state */
+.sip-enharmonic-row{
+  margin-top: 6px;
+}
+.sip-btn:disabled,
+.sip-btn.disabled{
+  opacity: 0.38;
+  cursor: not-allowed;
+  filter: grayscale(0.45);
+}
+
+.sip-enharmonic-btn{
+  min-width: 84px;
+}
+
+.sip-btn.disabled,
+.sip-btn:disabled{
+  opacity: 0.35;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.sip-set-btn{
+  min-width: 38px;
+}
+
+
+
+/* === Dark Glass / Obsidian Instrument Pass === */
+/* This block intentionally overrides only the wheel/instrument visuals. */
+
+/* Keep the SVG transparent against the black page, but add a barely visible internal sheen. */
+svg#wheel {
+  background:
+    radial-gradient(circle at 50% 30%,
+      rgba(255,255,255,0.035),
+      rgba(255,255,255,0.010) 28%,
+      transparent 62%);
+  isolation: isolate;
+}
+
+/* Main wheel body: dark glass / obsidian instead of grey stone. */
+.stone-ring {
+  fill: rgba(8, 8, 11, 0.94) !important;
+  stroke: rgba(255,255,255,0.095) !important;
+  stroke-width: 2 !important;
+  filter: drop-shadow(0 4px 9px rgba(0,0,0,0.48)) !important;
+}
+
+/* Interval ring: still visibly clickable, but no longer chunky grey. */
+.interval-wedge {
+  fill: rgba(255,255,255,0.032) !important;
+  stroke: rgba(255,255,255,0.06) !important;
+  stroke-width: 1.1px !important;
+  transition: fill 0.18s ease, stroke 0.18s ease, filter 0.18s ease;
+}
+
+.interval-wedge:hover {
+  fill: rgba(255,255,255,0.07) !important;
+  stroke: rgba(255,255,255,0.18) !important;
+  filter: drop-shadow(0 0 3px rgba(255,255,255,0.16)) !important;
+}
+
+.interval-wedge.active {
+  fill: rgba(255,255,255,0.09) !important;
+  stroke: rgba(255,255,255,0.32) !important;
+  filter: drop-shadow(0 0 4px rgba(255,255,255,0.22)) !important;
+}
+
+/* Note nodes: dark glass buttons, legible but restrained. */
+.note-circle {
+  fill: rgba(14, 14, 18, 0.96) !important;
+  stroke: rgba(255,255,255,0.14) !important;
+  stroke-width: 1.6 !important;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.38)) !important;
+}
+
+.note-circle:hover {
+  stroke: rgba(255,255,255,0.32) !important;
+}
+
+/* Center anchor: dark, simple, not stone-like. */
+.center {
+  fill: rgba(5,5,7, 1) !important;
+  stroke: rgba(255,255,255,0.12) !important;
+  stroke-width: 2 !important;
+}
+
+/* Spokes remain colorful and readable, but slightly less neon. */
+.spoke {
+  stroke-width: 4 !important;
+  opacity: 0;
+  filter: none !important;
+}
+
+.spoke.on {
+  opacity: 0.9 !important;
+}
+
+.spoke.on {
+  opacity: 0.82 !important;
+}
+
+/* Labels: crisp over dark glass. */
+.note-label,
+.interval-label {
+  fill: rgba(255,255,255,0.88) !important;
+  text-shadow: none !important;
+}
+
+/* Mode tiles become instrument pads: still colored, less web-button/neon. */
+.mode-tile {
+  background:
+    radial-gradient(circle at 50% 20%,
+      color-mix(in srgb, var(--tile-color) 48%, rgba(255,255,255,0.08)),
+      color-mix(in srgb, var(--tile-color) 34%, rgba(0,0,0,0.88)) 45%,
+      rgba(8,8,10,0.96) 130%) !important;
+  border: 1px solid rgba(255,255,255,0.10) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.08),
+    inset 0 -8px 14px rgba(0,0,0,0.34),
+    0 2px 6px rgba(0,0,0,0.28) !important;
+}
+
+.mode-tile:hover {
+  transform: scale(1.025) !important;
+  filter: brightness(1.12) !important;
+}
+
+.mode-tile .key-btn {
+  background-color: rgba(0,0,0,0.68) !important;
+  border: 1px solid rgba(255,255,255,0.055) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.035) !important;
+}
+
+.mode-tile .key-btn:hover {
+  background-color: rgba(12,12,14,0.78) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.05) !important;
+}
+
+.mode-tile .key-btn.active {
+  background-color: rgba(255,255,255,0.12) !important;
+  border-color: rgba(255,255,255,0.18) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.10),
+    0 0 4px rgba(255,255,255,0.18) !important;
+}
+
+/* Played/highlighted notes: visible, but not glow overload. */
+circle.note-circle.glow-active{
+  stroke: var(--glow-color, rgba(255,255,255,0.85)) !important;
+  stroke-width: 3px !important;
+  filter: drop-shadow(0 0 4px var(--glow-color, #ffffff)) !important;
+}
+
+text.note-label.glow-active {
+  fill: var(--glow-color, white) !important;
+  filter: brightness(1.22) !important;
+}
+
+/* Keep halos subtle. */
+.spoke-halo {
+  mix-blend-mode: screen;
+  filter: blur(0.8px) brightness(1.18) !important;
+}
+
+
+
+/* === Crisp Layered Glass Spokes + Mobile Tile Color Fallback === */
+/* These rules support the JS spoke stack: underlay + core + highlight.
+   No blur/drop-shadow, so the edges stay clean. */
+
+.spoke-stack .spoke-underlay,
+.spoke-stack .spoke,
+.spoke-stack .spoke-highlight {
+  opacity: 0;
+  pointer-events: none;
+  filter: none !important;
+  mix-blend-mode: normal !important;
+  vector-effect: non-scaling-stroke;
+}
+
+.spoke-stack.on .spoke-underlay {
+  opacity: 0.22;
+  stroke-width: 11;
+}
+
+.spoke-stack.on .spoke {
+  opacity: 0.95 !important;
+  stroke-width: 7.5 !important;
+  filter: none !important;
+}
+
+.spoke-stack.on .spoke-highlight {
+  opacity: 0.22;
+  stroke-width: 1.6;
+}
+
+/* Keep old single-spoke rules from interfering. */
+.spoke {
+  filter: none !important;
+  stroke-linecap: round;
+}
+
+/* Crisp playback pulse: broad but not blurry. */
+.spoke-halo {
+  opacity: 0;
+  transition: opacity 0.32s ease-out;
+  mix-blend-mode: screen;
+  pointer-events: none;
+  filter: none !important;
+}
+
+/* Keep the center hub opaque above the spoke stack. */
+.center {
+  fill: rgba(5,5,7,1) !important;
+  stroke: rgba(255,255,255,0.12) !important;
+  stroke-width: 2 !important;
+}
+
+/* Fallback for mobile browsers that ignore color-mix().
+   JS also sets an inline radial-gradient directly on each tile. */
+.mode-tile {
+  background-color: var(--tile-color) !important;
+  background-blend-mode: normal;
+}
+
+/* Small screens: simplify glass rods so they stay legible on iPhone SE. */
+@media (max-width: 480px) {
+  .spoke-stack.on .spoke-underlay {
+    opacity: 0.08;
+    stroke-width: 8.5;
+  }
+
+  .spoke-stack.on .spoke {
+    opacity: 1 !important;
+    stroke-width: 6.5 !important;
+  }
+
+  .spoke-stack.on .spoke-highlight {
+    opacity: 0.12;
+    stroke-width: 1.1;
+  }
+
+  .spoke-halo {
+    filter: none !important;
+    mix-blend-mode: normal !important;
+  }
+
+  .mode-tile {
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.07),
+      inset 0 -5px 10px rgba(0,0,0,0.30) !important;
+  }
+
+  .mode-tile .key-btn {
+    background-color: rgba(0,0,0,0.72) !important;
+  }
+}
+
+
+
+
+/* === Obsidian Gradient Notes + Interval Band Refinement === */
+/* Uses SVG gradients instead of small inner highlight circles, so the glass effect
+   reads as material depth rather than an extra drawn symbol. */
+
+.interval-glass-rim {
+  fill: none !important;
+  pointer-events: none;
+  vector-effect: non-scaling-stroke;
+}
+
+.interval-glass-rim-outer {
+  stroke: rgba(255,255,255,0.18) !important;
+  stroke-width: 1.7 !important;
+}
+
+.interval-glass-rim-inner {
+  stroke: rgba(255,255,255,0.105) !important;
+  stroke-width: 1.15 !important;
+}
+
+/* Interval wedges: subtle obsidian-glass body, still quiet enough not to distract. */
+.interval-wedge {
+  fill: url(#intervalGlassGrad) !important;
+  stroke: rgba(255,255,255,0.075) !important;
+  stroke-width: 1.05px !important;
+  filter: none !important;
+  transition: fill 0.18s ease, stroke 0.18s ease, filter 0.18s ease;
+}
+
+.interval-wedge:hover {
+  stroke: rgba(255,255,255,0.20) !important;
+  filter: brightness(1.12) !important;
+}
+
+.interval-wedge.active {
+  stroke: rgba(255,255,255,0.34) !important;
+  filter: brightness(1.22) !important;
+}
+
+/* Note nodes: obsidian bead material from an SVG radial gradient.
+   No internal outline/circle; the depth comes from the fill itself. */
+.note-circle {
+  fill: url(#noteGlassGrad) !important;
+  stroke: rgba(255,255,255,0.18) !important;
+  stroke-width: 1.75 !important;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.34)) !important;
+}
+
+.note-circle:hover {
+  stroke: rgba(255,255,255,0.34) !important;
+}
+
+/* Make sure the removed sheen layer never displays if an old cached DOM/CSS path survives. */
+.note-circle-sheen {
+  display: none !important;
+}
+
+/* Played/highlighted notes remain visible without bloom overload. */
+circle.note-circle.glow-active{
+  stroke: var(--glow-color, rgba(255,255,255,0.85)) !important;
+  stroke-width: 3px !important;
+  filter: drop-shadow(0 0 4px var(--glow-color, #ffffff)) !important;
+}
+
+/* Small-screen contrast boost for iPhone SE / mobile Safari. */
+@media (max-width: 480px) {
+  .interval-glass-rim-outer {
+    stroke: rgba(255,255,255,0.22) !important;
+    stroke-width: 1.6 !important;
+  }
+
+  .interval-glass-rim-inner {
+    stroke: rgba(255,255,255,0.12) !important;
+    stroke-width: 1.05 !important;
+  }
+
+  .interval-wedge {
+    stroke: rgba(255,255,255,0.105) !important;
+  }
+
+  .note-circle {
+    stroke: rgba(255,255,255,0.24) !important;
+    stroke-width: 1.65 !important;
+    filter: none !important;
+  }
+}
+
+
+/* === Layered Obsidian Note Rims === */
+/* Notes now get their glassiness from the edge: light-catching outer rim,
+   black separating band, and calm dark inner face. */
+
+.note-rim-outer,
+.note-rim-dark {
+  pointer-events: none;
+  vector-effect: non-scaling-stroke;
+}
+
+.note-rim-outer {
+  fill: none !important;
+  stroke: url(#noteRimGrad) !important;
+  stroke-width: 3.6 !important;
+  opacity: 0.92;
+}
+
+.note-rim-dark {
+  fill: none !important;
+  stroke: rgba(0,0,0,0.82) !important;
+  stroke-width: 2.1 !important;
+  opacity: 0.96;
+}
+
+.note-circle {
+  fill: rgba(14,14,18,0.98) !important;
+  stroke: rgba(255,255,255,0.105) !important;
+  stroke-width: 1.05 !important;
+  filter: none !important;
+}
+
+.note-circle:hover {
+  fill: rgba(18,18,23,0.98) !important;
+  stroke: rgba(255,255,255,0.18) !important;
+}
+
+/* When a note is played, brighten the rim rather than flooding the whole node. */
+.note-rim-outer:has(+ .note-rim-dark + .note-circle.glow-active) {
+  opacity: 1;
+}
+
+circle.note-circle.glow-active{
+  fill: rgba(18,18,23,1) !important;
+  stroke: var(--glow-color, rgba(255,255,255,0.85)) !important;
+  stroke-width: 1.8px !important;
+  filter: none !important;
+}
+
+/* Fallback: browsers that do not support :has still get a clean note face. */
+.note-circle-sheen {
+  display: none !important;
+}
+
+@media (max-width: 480px) {
+  .note-rim-outer {
+    stroke-width: 3.2 !important;
+    opacity: 0.96;
+  }
+
+  .note-rim-dark {
+    stroke-width: 1.8 !important;
+  }
+
+  .note-circle {
+    stroke: rgba(255,255,255,0.14) !important;
+    stroke-width: 0.9 !important;
+  }
+}
+
+
+/* === Refined Double-Band Note Rims === */
+/* Clear outer + inner outlines define the note circle; the glass gradient lives between them. */
+
+.note-rim-outline,
+.note-rim-glass {
+  fill: none !important;
+  pointer-events: none;
+  vector-effect: non-scaling-stroke;
+}
+
+/* Crisp outer boundary: visible but not chrome-heavy. */
+.note-rim-outline-outer {
+  stroke: rgba(220,222,232,0.32) !important;
+  stroke-width: 1.15 !important;
+  opacity: 0.96;
+}
+
+/* Glass material band between the two outlines. */
+.note-rim-glass {
+  stroke: url(#noteRimGrad) !important;
+  stroke-width: 2.25 !important;
+  opacity: 0.82;
+}
+
+/* Inner boundary/separating edge: keeps the face defined and inset. */
+.note-rim-outline-inner {
+  stroke: rgba(0,0,0,0.88) !important;
+  stroke-width: 1.25 !important;
+  opacity: 1;
+}
+
+.note-circle {
+  fill: rgba(13,13,17,0.99) !important;
+  stroke: rgba(255,255,255,0.09) !important;
+  stroke-width: 0.8 !important;
+  filter: none !important;
+}
+
+.note-circle:hover {
+  fill: rgba(18,18,23,1) !important;
+  stroke: rgba(255,255,255,0.16) !important;
+}
+
+/* Deactivate older rim classes if any linger from cache/previous bundle. */
+.note-rim-outer,
+.note-rim-dark {
+  display: none !important;
+}
+
+/* Played note: light the full rim system, not just the face. */
+.note-rim-outline.glow-active {
+  stroke: var(--glow-color, rgba(255,255,255,0.9)) !important;
+  opacity: 0.95 !important;
+}
+
+.note-rim-glass.glow-active {
+  stroke: var(--glow-color, rgba(255,255,255,0.9)) !important;
+  stroke-width: 2.45 !important;
+  opacity: 0.72 !important;
+}
+
+circle.note-circle.glow-active {
+  fill: rgba(18,18,23,1) !important;
+  stroke: var(--glow-color, rgba(255,255,255,0.85)) !important;
+  stroke-width: 1.4px !important;
+  filter: none !important;
+}
+
+@media (max-width: 480px) {
+  .note-rim-outline-outer {
+    stroke: rgba(230,232,240,0.38) !important;
+    stroke-width: 1.05 !important;
+  }
+
+  .note-rim-glass {
+    stroke-width: 2.0 !important;
+    opacity: 0.86;
+  }
+
+  .note-rim-outline-inner {
+    stroke-width: 1.05 !important;
+  }
+
+  .note-circle {
+    stroke-width: 0.65 !important;
+  }
+}
+
+
+/* === Center Hub Double-Band + Softer Played Glow === */
+/* Center hub now shares the same visual language as the note nodes. */
+
+#center-hub {
+  pointer-events: none;
+}
+
+.center-rim-outline,
+.center-rim-glass {
+  fill: none !important;
+  pointer-events: none;
+  vector-effect: non-scaling-stroke;
+}
+
+.center-rim-outline-outer {
+  stroke: rgba(220,222,232,0.30) !important;
+  stroke-width: 1.2 !important;
+  opacity: 0.96;
+}
+
+.center-rim-glass {
+  stroke: url(#noteRimGrad) !important;
+  stroke-width: 2.5 !important;
+  opacity: 0.80;
+}
+
+.center-rim-outline-inner {
+  stroke: rgba(0,0,0,0.88) !important;
+  stroke-width: 1.3 !important;
+  opacity: 1;
+}
+
+.center {
+  fill: rgba(11,11,15,1) !important;
+  stroke: rgba(255,255,255,0.085) !important;
+  stroke-width: 0.85 !important;
+  filter: none !important;
+}
+
+/* Softer playback pulse: rim participates, but does not become a thick static ring. */
+.note-rim-outline.glow-active {
+  stroke: var(--glow-color, rgba(255,255,255,0.85)) !important;
+  stroke-width: 1.15 !important;
+  opacity: 0.68 !important;
+  animation: rimPulseSoft 0.72s ease-out forwards;
+}
+
+.note-rim-glass.glow-active {
+  stroke: var(--glow-color, rgba(255,255,255,0.85)) !important;
+  stroke-width: 2.25 !important;
+  opacity: 0.52 !important;
+  animation: rimPulseSoft 0.72s ease-out forwards;
+}
+
+circle.note-circle.glow-active {
+  fill: rgba(18,18,23,1) !important;
+  stroke: var(--glow-color, rgba(255,255,255,0.75)) !important;
+  stroke-width: 1.05px !important;
+  filter: none !important;
+  animation: noteFacePulseSoft 0.72s ease-out forwards;
+}
+
+@keyframes rimPulseSoft {
+  0%   { opacity: 0.24; }
+  20%  { opacity: 0.68; }
+  100% { opacity: 0; }
+}
+
+@keyframes noteFacePulseSoft {
+  0%   { stroke-opacity: 0.35; }
+  22%  { stroke-opacity: 0.82; }
+  100% { stroke-opacity: 0; }
+}
+
+/* The white spoke pulse should also decay gently instead of sitting too bright. */
+.spoke-halo {
+  transition: opacity 0.48s ease-out !important;
+}
+
+@media (max-width: 480px) {
+  .center-rim-outline-outer {
+    stroke: rgba(230,232,240,0.36) !important;
+    stroke-width: 1.05 !important;
+  }
+
+  .center-rim-glass {
+    stroke-width: 2.2 !important;
+    opacity: 0.84;
+  }
+
+  .center-rim-outline-inner {
+    stroke-width: 1.05 !important;
+  }
+
+  .center {
+    stroke-width: 0.7 !important;
+  }
+
+  .note-rim-outline.glow-active,
+  .note-rim-glass.glow-active,
+  circle.note-circle.glow-active {
+    animation-duration: 0.62s;
+  }
+}
+
+
+/* === Equalized Center Hub + Double-Banded Interval Ring === */
+/* Center hub now uses the exact same visual scale as note nodes. */
+#center-hub .center-rim-outline-outer {
+  stroke: rgba(220,222,232,0.32) !important;
+  stroke-width: 1.15 !important;
+  opacity: 0.96;
+}
+
+#center-hub .center-rim-glass {
+  stroke: url(#noteRimGrad) !important;
+  stroke-width: 2.25 !important;
+  opacity: 0.82;
+}
+
+#center-hub .center-rim-outline-inner {
+  stroke: rgba(0,0,0,0.88) !important;
+  stroke-width: 1.25 !important;
+  opacity: 1;
+}
+
+#center-hub .center {
+  fill: rgba(13,13,17,0.99) !important;
+  stroke: rgba(255,255,255,0.09) !important;
+  stroke-width: 0.8 !important;
+  filter: none !important;
+}
+
+/* Hide older simpler interval rim classes if present. */
+.interval-glass-rim {
+  display: none !important;
+}
+
+/* Interval ring gets the same vocabulary:
+   crisp outline / glass band / black separating edge. */
+.interval-rim-outline,
+.interval-rim-glass,
+.interval-rim-dark {
+  fill: none !important;
+  pointer-events: none;
+  vector-effect: non-scaling-stroke;
+}
+
+.interval-rim-outline {
+  stroke: rgba(220,222,232,0.20) !important;
+  stroke-width: 1.15 !important;
+  opacity: 0.92;
+}
+
+.interval-rim-glass {
+  stroke: url(#noteRimGrad) !important;
+  stroke-width: 2.15 !important;
+  opacity: 0.42;
+}
+
+.interval-rim-dark {
+  stroke: rgba(0,0,0,0.74) !important;
+  stroke-width: 1.05 !important;
+  opacity: 0.92;
+}
+
+/* Outer contour should remain a touch clearer so the wheel does not dissolve into black. */
+.interval-rim-outline-outer {
+  stroke: rgba(225,226,235,0.27) !important;
+  stroke-width: 1.2 !important;
+}
+
+.interval-rim-glass-outer {
+  opacity: 0.50;
+}
+
+.interval-rim-dark-outer {
+  opacity: 0.86;
+}
+
+/* Inner boundary can be slightly quieter to avoid competing with spokes/notes. */
+.interval-rim-outline-inner {
+  stroke: rgba(220,222,232,0.15) !important;
+}
+
+.interval-rim-glass-inner {
+  opacity: 0.32;
+}
+
+.interval-rim-dark-inner {
+  opacity: 0.82;
+}
+
+/* Keep wedge bodies calm underneath the new rim structure. */
+.interval-wedge {
+  fill: url(#intervalGlassGrad) !important;
+  stroke: rgba(255,255,255,0.052) !important;
+  stroke-width: 0.9px !important;
+  filter: none !important;
+}
+
+.interval-wedge:hover {
+  stroke: rgba(255,255,255,0.16) !important;
+  filter: brightness(1.10) !important;
+}
+
+.interval-wedge.active {
+  stroke: rgba(255,255,255,0.26) !important;
+  filter: brightness(1.16) !important;
+}
+
+@media (max-width: 480px) {
+  .interval-rim-outline-outer {
+    stroke: rgba(235,236,244,0.34) !important;
+    stroke-width: 1.15 !important;
+  }
+
+  .interval-rim-glass-outer {
+    opacity: 0.52;
+    stroke-width: 1.9 !important;
+  }
+
+  .interval-rim-outline-inner {
+    stroke: rgba(230,232,240,0.18) !important;
+  }
+
+  .interval-rim-glass-inner {
+    opacity: 0.30;
+    stroke-width: 1.8 !important;
+  }
+
+  .interval-rim-dark {
+    stroke-width: 0.95 !important;
+  }
+}
+
+
+/* === Visible Interval Double-Band Refinement === */
+/* Rims are drawn above the wedges. This pass makes the inner/outer edges read clearly:
+   outline / glass sheen / black separating edge. */
+
+.interval-rim-outline,
+.interval-rim-glass,
+.interval-rim-dark {
+  display: initial !important;
+  fill: none !important;
+  pointer-events: none !important;
+  vector-effect: non-scaling-stroke;
+}
+
+/* Outer edge: most visible, so the wheel no longer dissolves into black. */
+.interval-rim-outline-outer {
+  stroke: rgba(235,236,244,0.34) !important;
+  stroke-width: 1.35 !important;
+  opacity: 1 !important;
+}
+
+.interval-rim-glass-outer {
+  stroke: url(#noteRimGrad) !important;
+  stroke-width: 3.1 !important;
+  opacity: 0.68 !important;
+}
+
+.interval-rim-dark-outer {
+  stroke: rgba(0,0,0,0.86) !important;
+  stroke-width: 1.25 !important;
+  opacity: 0.95 !important;
+}
+
+/* Inner edge: defined, but slightly quieter so it doesn't fight the spokes. */
+.interval-rim-outline-inner {
+  stroke: rgba(230,232,240,0.24) !important;
+  stroke-width: 1.18 !important;
+  opacity: 0.96 !important;
+}
+
+.interval-rim-glass-inner {
+  stroke: url(#noteRimGrad) !important;
+  stroke-width: 2.65 !important;
+  opacity: 0.48 !important;
+}
+
+.interval-rim-dark-inner {
+  stroke: rgba(0,0,0,0.82) !important;
+  stroke-width: 1.1 !important;
+  opacity: 0.92 !important;
+}
+
+/* Quiet the wedge separators a bit so the new rim treatment is visible. */
+.interval-wedge {
+  stroke: rgba(255,255,255,0.042) !important;
+  stroke-width: 0.78px !important;
+}
+
+@media (max-width: 480px) {
+  .interval-rim-outline-outer {
+    stroke: rgba(245,246,252,0.42) !important;
+    stroke-width: 1.25 !important;
+  }
+
+  .interval-rim-glass-outer {
+    stroke-width: 2.65 !important;
+    opacity: 0.72 !important;
+  }
+
+  .interval-rim-outline-inner {
+    stroke: rgba(235,236,244,0.28) !important;
+  }
+
+  .interval-rim-glass-inner {
+    stroke-width: 2.25 !important;
+    opacity: 0.50 !important;
+  }
+}
+
+
+/* === Subtle Obsidian Interval Ring Pass === */
+/* Reduce graphic grey outlines. Outer edge gets the material treatment;
+   inner edge becomes quieter so the interval band reads as dark glass, not a bordered diagram. */
+
+/* Keep the rim layers visible, but make them material-like. */
+.interval-rim-outline,
+.interval-rim-glass,
+.interval-rim-dark {
+  display: initial !important;
+  fill: none !important;
+  pointer-events: none !important;
+  vector-effect: non-scaling-stroke;
+}
+
+/* OUTER EDGE: dark separators with a low-opacity glass band between them. */
+.interval-rim-outline-outer {
+  stroke: rgba(230,232,240,0.16) !important;
+  stroke-width: 0.85 !important;
+  opacity: 0.9 !important;
+}
+
+.interval-rim-glass-outer {
+  stroke: url(#noteRimGrad) !important;
+  stroke-width: 4.4 !important;
+  opacity: 0.24 !important;
+}
+
+.interval-rim-dark-outer {
+  stroke: rgba(0,0,0,0.88) !important;
+  stroke-width: 1.15 !important;
+  opacity: 0.95 !important;
+}
+
+/* INNER EDGE: much quieter; it defines the band without creating a second loud ring. */
+.interval-rim-outline-inner {
+  stroke: rgba(225,226,235,0.10) !important;
+  stroke-width: 0.75 !important;
+  opacity: 0.82 !important;
+}
+
+.interval-rim-glass-inner {
+  stroke: url(#noteRimGrad) !important;
+  stroke-width: 2.4 !important;
+  opacity: 0.12 !important;
+}
+
+.interval-rim-dark-inner {
+  stroke: rgba(0,0,0,0.72) !important;
+  stroke-width: 0.95 !important;
+  opacity: 0.78 !important;
+}
+
+/* Wedges should become the body of the glass plate, not a high-contrast segmented border. */
+.interval-wedge {
+  fill: url(#intervalGlassGrad) !important;
+  stroke: rgba(255,255,255,0.030) !important;
+  stroke-width: 0.65px !important;
+  filter: none !important;
+}
+
+.interval-wedge:hover {
+  stroke: rgba(255,255,255,0.12) !important;
+  filter: brightness(1.08) !important;
+}
+
+.interval-wedge.active {
+  stroke: rgba(255,255,255,0.20) !important;
+  filter: brightness(1.13) !important;
+}
+
+/* Mobile: preserve legibility, but still avoid the heavy grey-outline look. */
+@media (max-width: 480px) {
+  .interval-rim-outline-outer {
+    stroke: rgba(240,242,248,0.22) !important;
+    stroke-width: 0.85 !important;
+  }
+
+  .interval-rim-glass-outer {
+    stroke-width: 3.6 !important;
+    opacity: 0.28 !important;
+  }
+
+  .interval-rim-dark-outer {
+    stroke-width: 1.0 !important;
+  }
+
+  .interval-rim-outline-inner {
+    stroke: rgba(235,236,244,0.13) !important;
+  }
+
+  .interval-rim-glass-inner {
+    opacity: 0.14 !important;
+    stroke-width: 2.0 !important;
+  }
+
+  .interval-wedge {
+    stroke: rgba(255,255,255,0.045) !important;
+  }
+}
+
+
+/* === Interval Wedge Active/Inactive Depth Refinement === */
+/* Keep the obsidian material, but make active wedge selection easier to read. */
+
+.interval-wedge {
+  stroke: rgba(0,0,0,0.42) !important;
+  stroke-width: 0.72px !important;
+  filter: brightness(0.96) !important;
+}
+
+.interval-wedge:hover {
+  stroke: rgba(255,255,255,0.18) !important;
+  stroke-width: 0.9px !important;
+  filter: brightness(1.10) !important;
+}
+
+.interval-wedge.active {
+  stroke: rgba(238,240,248,0.38) !important;
+  stroke-width: 1.08px !important;
+  filter: brightness(1.26) !important;
+}
+
+/* Slightly stronger on small screens for legibility. */
+@media (max-width: 480px) {
+  .interval-wedge {
+    stroke: rgba(0,0,0,0.48) !important;
+    stroke-width: 0.70px !important;
+  }
+
+  .interval-wedge.active {
+    stroke: rgba(245,246,252,0.44) !important;
+    stroke-width: 1.05px !important;
+    filter: brightness(1.30) !important;
+  }
+}
+
+
+/* === Smoked Glass Wheel Field === */
+/* Restores a very subtle internal surface behind notes/spokes without returning to grey stone. */
+.stone-ring {
+  fill: url(#wheelFieldGrad) !important;
+  stroke: rgba(255,255,255,0.095) !important;
+  stroke-width: 1.7 !important;
+  filter: none !important;
+}
+
+/* Slight inner field definition so the wheel reads as an object on the black page. */
+svg#wheel {
+  background:
+    radial-gradient(circle at 50% 45%,
+      rgba(255,255,255,0.018),
+      rgba(255,255,255,0.006) 38%,
+      transparent 68%);
+}
+
+
+/* === Larger Wheel / Tighter Vertical Stage === */
+#mw-container {
+  --wheelSize: min(88vmin, 790px);
+  gap: 10px !important;
+}
+
+#controls {
+  gap: 8px !important;
+}
+
+#key-rows {
+  margin-top: 2px !important;
+}
+
+#mode-controls {
+  margin-top: 8px !important;
+}
+
+@media (max-width: 768px) {
+  svg#wheel {
+    width: 98vw;
+    height: 98vw;
+  }
+
+  #mw-container {
+    gap: 8px !important;
+  }
+
+  #key-rows {
+    margin-top: 0 !important;
+  }
+}
+
+
+/* Spoke visual layers stay behind notes and do not interfere with note/circle reading. */
+.spoke-stack,
+.spoke-underlay,
+.spoke,
+.spoke-highlight,
+.spoke-halo {
+  pointer-events: none !important;
+}
+
+
+/* === Final Vertical Tightening === */
+#mw-container {
+  gap: 6px !important;
+}
+
+#controls {
+  gap: 5px !important;
+}
+
+#key-rows {
+  margin-top: -2px !important;
+}
+
+#mode-controls {
+  margin-top: 6px !important;
+}
+
+@media (max-width: 768px) {
+  #mw-container {
+    gap: 5px !important;
+  }
+
+  #key-rows {
+    margin-top: -3px !important;
+  }
+}
+
+
+/* === Spoke Bleed Masks + Grey Edge Cleanup === */
+/* Opaque dark backplates keep colored spokes from showing through double-band note/center rims. */
+.note-spoke-mask,
+.center-spoke-mask {
+  fill: #050507 !important;
+  stroke: none !important;
+  pointer-events: none;
+}
+
+/* Keep the note rim defined, but remove the stray grey halo at the note-ring edge. */
+.note-rim-outline-outer {
+  stroke: rgba(226,228,236,0.26) !important;
+  stroke-width: 1.0 !important;
+}
+
+.note-rim-glass {
+  opacity: 0.72 !important;
+  stroke-width: 2.0 !important;
+}
+
+.note-rim-outline-inner {
+  stroke: rgba(0,0,0,0.92) !important;
+  stroke-width: 1.18 !important;
+}
+
+/* Center uses same masking/definition as note nodes. */
+.center-rim-outline-outer {
+  stroke: rgba(226,228,236,0.26) !important;
+  stroke-width: 1.0 !important;
+}
+
+.center-rim-glass {
+  opacity: 0.72 !important;
+  stroke-width: 2.0 !important;
+}
+
+.center-rim-outline-inner {
+  stroke: rgba(0,0,0,0.92) !important;
+  stroke-width: 1.18 !important;
+}
+
+/* The main wheel field edge can read as a grey circle after spacing changes; make it quieter. */
+.stone-ring {
+  stroke: rgba(255,255,255,0.055) !important;
+  stroke-width: 1.25 !important;
+}
+
+@media (max-width: 480px) {
+  .note-spoke-mask {
+    r: 32.5;
+  }
+
+  .note-rim-outline-outer,
+  .center-rim-outline-outer {
+    stroke: rgba(235,236,244,0.32) !important;
+  }
+}
+
+
+/* === Readability / Value Structure Pass === */
+/* Adds back a little light and mid-tone structure without returning to grey stone. */
+
+/* Slightly lighter smoked-glass wheel field so notes/spokes are easier to parse. */
+.stone-ring {
+  fill: url(#wheelFieldGrad) !important;
+  stroke: rgba(255,255,255,0.075) !important;
+  stroke-width: 1.2 !important;
+}
+
+/* Calm the label white: less glare, still legible. */
+.note-label,
+.interval-label {
+  fill: rgba(232,235,244,0.92) !important;
+}
+
+.note-label {
+  font-weight: 500;
+}
+
+/* Lift note faces very slightly so they read as a foreground layer. */
+.note-circle {
+  fill: rgba(19,19,25,0.99) !important;
+  stroke: rgba(255,255,255,0.105) !important;
+}
+
+.note-circle:hover {
+  fill: rgba(23,23,30,1) !important;
+  stroke: rgba(255,255,255,0.19) !important;
+}
+
+/* Keep the double rim tactile but less stark than pure bright-on-black. */
+.note-rim-outline-outer,
+.center-rim-outline-outer {
+  stroke: rgba(225,228,238,0.30) !important;
+}
+
+.note-rim-glass,
+.center-rim-glass {
+  opacity: 0.76 !important;
+}
+
+/* Give the interval body a bit more legibility while preserving the obsidian look. */
+.interval-wedge {
+  filter: brightness(1.04) !important;
+  stroke: rgba(0,0,0,0.34) !important;
+}
+
+.interval-wedge:hover {
+  filter: brightness(1.14) !important;
+  stroke: rgba(255,255,255,0.18) !important;
+}
+
+.interval-wedge.active {
+  filter: brightness(1.32) !important;
+  stroke: rgba(238,240,248,0.40) !important;
+  stroke-width: 1.08px !important;
+}
+
+/* Keep the interval outer rim visible but not grey/bulky. */
+.interval-rim-outline-outer {
+  stroke: rgba(235,236,244,0.20) !important;
+}
+
+.interval-rim-glass-outer {
+  opacity: 0.30 !important;
+}
+
+/* Small screens: slightly more contrast for readability. */
+@media (max-width: 480px) {
+  .note-label,
+  .interval-label {
+    fill: rgba(238,240,248,0.95) !important;
+  }
+
+  .note-circle {
+    fill: rgba(21,21,27,1) !important;
+  }
+
+  .interval-wedge.active {
+    filter: brightness(1.36) !important;
+    stroke: rgba(245,246,252,0.46) !important;
+  }
+}
+
+
+/* === stronger active wedges only === */
+.interval-wedge.active {
+  filter: brightness(1.38) !important;
+  stroke: rgba(255,255,255,0.55) !important;
+  stroke-width: 1.2px !important;
+}
+
+
+/* === subtle note shadow === */
+.note-circle, .center {
+  filter: drop-shadow(0 1.5px 2px rgba(0,0,0,0.55));
+}
+
+
+/* === Focused Readability Polish === */
+/* Requested: slightly more wedge separation, slight outer field lift, pure white text,
+   and brighter note-circle bands. */
+
+/* All wheel labels back to pure white for maximum parsing speed. */
+.note-label,
+.interval-label {
+  fill: #ffffff !important;
+}
+
+/* Slight lift to the outer field edge so the wheel does not fall into the black page. */
+.stone-ring {
+  stroke: rgba(255,255,255,0.095) !important;
+  stroke-width: 1.25 !important;
+}
+
+/* Inactive wedge separation: darker cut-lines between adjacent inactive wedges. */
+.interval-wedge {
+  stroke: rgba(0,0,0,0.56) !important;
+  stroke-width: 0.9px !important;
+  filter: brightness(1.03) !important;
+}
+
+/* Hover remains clear but not flashy. */
+.interval-wedge:hover {
+  stroke: rgba(255,255,255,0.22) !important;
+  stroke-width: 1.0px !important;
+  filter: brightness(1.14) !important;
+}
+
+/* Active wedges stay visibly selected. */
+.interval-wedge.active {
+  filter: brightness(1.38) !important;
+  stroke: rgba(255,255,255,0.58) !important;
+  stroke-width: 1.22px !important;
+}
+
+/* Brighter double band around note circles and center hub. */
+.note-rim-outline-outer,
+.center-rim-outline-outer {
+  stroke: rgba(245,247,255,0.42) !important;
+  stroke-width: 1.08px !important;
+}
+
+.note-rim-glass,
+.center-rim-glass {
+  opacity: 0.84 !important;
+  stroke-width: 2.08px !important;
+}
+
+.note-rim-outline-inner,
+.center-rim-outline-inner {
+  stroke: rgba(0,0,0,0.94) !important;
+  stroke-width: 1.2px !important;
+}
+
+/* Keep note faces dark so the brighter band frames them cleanly. */
+.note-circle,
+.center {
+  fill: rgba(18,18,24,0.99) !important;
+  stroke: rgba(255,255,255,0.12) !important;
+}
+
+/* Mobile keeps the same intent but with a tiny contrast bump. */
+@media (max-width: 480px) {
+  .interval-wedge {
+    stroke: rgba(0,0,0,0.62) !important;
+    stroke-width: 0.82px !important;
+  }
+
+  .interval-wedge.active {
+    stroke: rgba(255,255,255,0.66) !important;
+    stroke-width: 1.12px !important;
+  }
+
+  .note-rim-outline-outer,
+  .center-rim-outline-outer {
+    stroke: rgba(250,251,255,0.50) !important;
+  }
+}
+
+
+/* === Restored internal wheel field gradient === */
+svg#wheel {
+  background:
+    radial-gradient(circle at 50% 42%,
+      rgba(255,255,255,0.045) 0%,
+      rgba(255,255,255,0.02) 28%,
+      rgba(255,255,255,0.008) 45%,
+      transparent 65%),
+    radial-gradient(circle at 50% 60%,
+      rgba(0,0,0,0.35),
+      transparent 70%);
+}
+
+
+/* === Typography Pass v2: Keep Wheel Labels Functional, Refine UI Text Only === */
+/* This version intentionally preserves the earlier note-name feel and restores interval-ring legibility. */
+
+/* Restore note labels close to the pre-typography-pass look. */
+.note-label {
+  fill: rgba(255,255,255,0.96) !important;
+  font-family: 'Cardo', serif !important;
+  font-weight: 400 !important;
+  letter-spacing: 0 !important;
+  stroke: none !important;
+  paint-order: normal !important;
+  text-rendering: auto;
+}
+
+/* Restore interval labels brighter and cleaner than the first typography pass. */
+.interval-label {
+  fill: rgba(255,255,255,0.97) !important;
+  font-family: 'Cardo', serif !important;
+  font-weight: 400 !important;
+  font-size: 15px !important;
+  letter-spacing: 0 !important;
+  stroke: none !important;
+  paint-order: normal !important;
+  text-rendering: auto;
+}
+
+/* Keep the improved mode tile hierarchy only. */
+.mode-tile .key-btn {
+  font-family: "Cormorant Garamond", Garamond, "Palatino Linotype", Palatino, serif !important;
+  text-rendering: optimizeLegibility;
+}
+
+.mode-tile .roman-btn {
+  font-weight: 700 !important;
+  font-size: clamp(15px, 1.35vw, 18px) !important;
+  letter-spacing: 0.015em !important;
+  line-height: 1.05 !important;
+  color: rgba(255,255,255,0.98) !important;
+  text-shadow:
+    0 1px 0 rgba(0,0,0,0.85),
+    0 -1px 0 rgba(255,255,255,0.045) !important;
+}
+
+.mode-tile .key-name {
+  font-weight: 600 !important;
+  font-size: clamp(12px, 1.05vw, 15px) !important;
+  letter-spacing: 0.005em !important;
+  line-height: 1.08 !important;
+  color: rgba(255,255,255,0.91) !important;
+  text-shadow:
+    0 1px 0 rgba(0,0,0,0.78) !important;
+}
+
+.mode-tile .key-btn.active {
+  color: rgba(255,255,255,1) !important;
+  text-shadow:
+    0 1px 0 rgba(0,0,0,0.9),
+    0 0 5px rgba(255,255,255,0.14) !important;
+}
+
+/* Control typography: subtle polish, not a readability risk. */
+#mode-controls,
+#controls button,
+#index-input,
+#family-display,
+#mode-display,
+#key-display,
+#notes-display {
+  font-family: "Cormorant Garamond", Garamond, "Palatino Linotype", Palatino, serif !important;
+}
+
+.control-label {
+  font-weight: 600 !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.68) !important;
+}
+
+#family-display,
+#mode-display,
+#key-display,
+#notes-display,
+#index-input {
+  font-weight: 600 !important;
+  letter-spacing: 0.015em !important;
+  color: rgba(255,255,255,0.93) !important;
+}
+
+/* Scale info panel: calm analytical hierarchy. */
+.sip-title {
+  font-family: "Cormorant Garamond", Garamond, "Palatino Linotype", Palatino, serif !important;
+  font-weight: 700 !important;
+  font-size: 16px !important;
+  letter-spacing: 0.01em !important;
+  color: rgba(255,255,255,0.94) !important;
+}
+
+.sip-spelling-label,
+.sip-label {
+  font-family: "Cormorant Garamond", Garamond, "Palatino Linotype", Palatino, serif !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.64) !important;
+}
+
+/* Mobile: only tune tile/control text. Leave SVG labels alone. */
+@media (max-width: 480px) {
+  .interval-label {
+    fill: rgba(255,255,255,1) !important;
+    font-size: 15px !important;
+  }
+
+  .mode-tile .roman-btn {
+    font-size: 0.72rem !important;
+    line-height: 1.0 !important;
+    letter-spacing: 0 !important;
+  }
+
+  .mode-tile .key-name {
+    font-size: 0.58rem !important;
+    line-height: 1.0 !important;
+    letter-spacing: -0.01em !important;
+  }
+
+  .control-label {
+    font-size: 11px !important;
+    letter-spacing: 0.035em !important;
+  }
+}
+
+@media (max-width: 380px) {
+  .mode-tile .roman-btn {
+    font-size: 0.68rem !important;
+  }
+
+  .mode-tile .key-name {
+    font-size: 0.54rem !important;
+  }
+}
+
+
+/* === Roman Numeral Correction Pass === */
+/* Removes the experimental floating bars and improves numeral readability directly. */
+
+/* Kill any pseudo-line bar treatment from the previous experiment. */
+.mode-tile .roman-btn::before,
+.mode-tile .roman-btn::after {
+  content: none !important;
+  display: none !important;
+}
+
+/* Make Roman numerals larger and more even without relying on bars. */
+.mode-tile .roman-btn {
+  position: relative;
+  font-size: clamp(17px, 1.55vw, 20px) !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.018em !important;
+  line-height: 1.05 !important;
+  padding-top: 5px !important;
+  padding-bottom: 5px !important;
+  color: rgba(255,255,255,0.99) !important;
+}
+
+/* If the JS uses lower/upper classes later, this keeps lowercase from visually collapsing. */
+.mode-tile .roman-btn.minor,
+.mode-tile .roman-btn.lowercase {
+  font-size: clamp(17px, 1.55vw, 20px) !important;
+  font-weight: 700 !important;
+}
+
+/* Augmented / diminished symbols: bigger and more anchored.
+   This covers common markup possibilities. */
+.mode-tile .roman-btn sup,
+.mode-tile .roman-btn .quality,
+.mode-tile .roman-btn .chord-quality,
+.mode-tile .roman-btn .modifier {
+  font-size: 0.82em !important;
+  line-height: 0 !important;
+  vertical-align: 0.22em !important;
+  margin-left: 1px !important;
+  opacity: 0.98 !important;
+  font-weight: 700 !important;
+}
+
+/* Mobile: preserve scanability on small screens. */
+@media (max-width: 480px) {
+  .mode-tile .roman-btn {
+    font-size: 0.76rem !important;
+    line-height: 1.02 !important;
+    padding-top: 4px !important;
+    padding-bottom: 4px !important;
+    letter-spacing: 0.005em !important;
+  }
+
+  .mode-tile .roman-btn sup,
+  .mode-tile .roman-btn .quality,
+  .mode-tile .roman-btn .chord-quality,
+  .mode-tile .roman-btn .modifier {
+    font-size: 0.86em !important;
+    vertical-align: 0.18em !important;
+  }
+}
+
+@media (max-width: 380px) {
+  .mode-tile .roman-btn {
+    font-size: 0.72rem !important;
+  }
+}
+
+
+/* === Experimental Mode Tile "Instrument Pad" Pass === */
+/* Visual-only experiment: keeps current tile placement/layout, but makes each tile
+   feel less like nested web buttons and more like a playable two-zone pad. */
+
+.mode-tile {
+  position: relative;
+  overflow: hidden !important;
+  border-radius: 9px !important;
+  padding: 3px !important;
+  gap: 3px !important;
+
+  background:
+    radial-gradient(circle at 50% 12%,
+      color-mix(in srgb, var(--tile-color) 62%, rgba(255,255,255,0.12)),
+      color-mix(in srgb, var(--tile-color) 36%, rgba(0,0,0,0.82)) 42%,
+      rgba(6,6,8,0.98) 120%) !important;
+
+  border: 1px solid rgba(255,255,255,0.16) !important;
+
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.16),
+    inset 0 -10px 16px rgba(0,0,0,0.42),
+    inset 0 0 0 1px rgba(0,0,0,0.42),
+    0 2px 7px rgba(0,0,0,0.36) !important;
+
+  transition:
+    transform 0.09s ease,
+    filter 0.14s ease,
+    box-shadow 0.14s ease !important;
+}
+
+/* A subtle inner plate sheen so the tile reads as one object. */
+.mode-tile::before {
+  content: "";
+  position: absolute;
+  inset: 1px;
+  border-radius: 8px;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg,
+      rgba(255,255,255,0.10),
+      rgba(255,255,255,0.025) 34%,
+      rgba(0,0,0,0.18) 100%);
+  opacity: 0.72;
+}
+
+/* A fine separator between the chord and scale zones.
+   On the current stacked layout this is horizontal; later desktop side-panel
+   could flip this into a vertical separator. */
+.mode-tile::after {
+  content: "";
+  position: absolute;
+  left: 10%;
+  right: 10%;
+  top: 50%;
+  height: 1px;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg,
+      transparent,
+      rgba(255,255,255,0.18),
+      transparent);
+  opacity: 0.62;
+}
+
+/* Hover: less web-scale, more tactile lift. */
+.mode-tile:hover {
+  transform: translateY(-1px) scale(1.012) !important;
+  filter: brightness(1.08) saturate(1.04) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.18),
+    inset 0 -10px 16px rgba(0,0,0,0.38),
+    inset 0 0 0 1px rgba(0,0,0,0.42),
+    0 4px 10px rgba(0,0,0,0.42) !important;
+}
+
+/* Press: physical compression instead of a web-button glow. */
+.mode-tile:active {
+  transform: translateY(1px) scale(0.985) !important;
+  filter: brightness(0.94) saturate(0.98) !important;
+  box-shadow:
+    inset 0 4px 10px rgba(0,0,0,0.62),
+    inset 0 1px 0 rgba(255,255,255,0.08),
+    inset 0 0 0 1px rgba(0,0,0,0.55),
+    0 1px 3px rgba(0,0,0,0.35) !important;
+}
+
+/* Inner actions become zones on the pad, not separate raised buttons. */
+.mode-tile .key-btn {
+  position: relative;
+  z-index: 1;
+  margin: 0 !important;
+  border-radius: 6px !important;
+  border: 1px solid rgba(255,255,255,0.055) !important;
+  background:
+    linear-gradient(180deg,
+      rgba(0,0,0,0.52),
+      rgba(0,0,0,0.72)) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.055),
+    inset 0 -2px 5px rgba(0,0,0,0.34) !important;
+  transition:
+    background 0.12s ease,
+    transform 0.08s ease,
+    filter 0.12s ease,
+    border-color 0.12s ease !important;
+}
+
+/* Top/chord zone: a bit more punch, but not at the expense of the mode name. */
+.mode-tile .roman-btn {
+  font-size: clamp(17px, 1.5vw, 20px) !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.015em !important;
+  color: rgba(255,255,255,0.99) !important;
+}
+
+/* Bottom/scale zone: equally readable, slightly more spacious. */
+.mode-tile .key-name {
+  font-size: clamp(13px, 1.1vw, 16px) !important;
+  font-weight: 650 !important;
+  letter-spacing: 0.002em !important;
+  color: rgba(255,255,255,0.95) !important;
+}
+
+/* Directly pressing a zone gives a localized pad response. */
+.mode-tile .key-btn:hover {
+  background:
+    linear-gradient(180deg,
+      rgba(10,10,12,0.56),
+      rgba(0,0,0,0.74)) !important;
+  border-color: rgba(255,255,255,0.12) !important;
+  filter: brightness(1.04) !important;
+}
+
+.mode-tile .key-btn:active {
+  transform: translateY(1px) scale(0.985);
+  background:
+    linear-gradient(180deg,
+      rgba(0,0,0,0.72),
+      rgba(0,0,0,0.84)) !important;
+  box-shadow:
+    inset 0 3px 7px rgba(0,0,0,0.62),
+    inset 0 1px 0 rgba(255,255,255,0.035) !important;
+}
+
+/* Active state: clearer selected zone without neon bloom. */
+.mode-tile .key-btn.active {
+  background:
+    linear-gradient(180deg,
+      rgba(255,255,255,0.16),
+      rgba(255,255,255,0.075)) !important;
+  border-color: rgba(255,255,255,0.22) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.14),
+    inset 0 -3px 8px rgba(0,0,0,0.30),
+    0 0 5px rgba(255,255,255,0.12) !important;
+}
+
+/* Keep the improved augmented/diminished visibility from the correction pass. */
+.mode-tile .roman-btn sup,
+.mode-tile .roman-btn .quality,
+.mode-tile .roman-btn .chord-quality,
+.mode-tile .roman-btn .modifier {
+  font-size: 0.82em !important;
+  line-height: 0 !important;
+  vertical-align: 0.22em !important;
+  margin-left: 1px !important;
+  opacity: 0.98 !important;
+  font-weight: 700 !important;
+}
+
+/* Mobile: same pad idea, but thinner so it doesn't get chunky. */
+@media (max-width: 480px) {
+  .mode-tile {
+    border-radius: 7px !important;
+    padding: 2px !important;
+    gap: 2px !important;
+  }
+
+  .mode-tile::before {
+    border-radius: 6px;
+    opacity: 0.58;
+  }
+
+  .mode-tile::after {
+    left: 12%;
+    right: 12%;
+    opacity: 0.48;
+  }
+
+  .mode-tile .roman-btn {
+    font-size: 0.76rem !important;
+    line-height: 1.02 !important;
+  }
+
+  .mode-tile .key-name {
+    font-size: 0.60rem !important;
+    line-height: 1.02 !important;
+    letter-spacing: -0.01em !important;
+  }
+
+  .mode-tile .key-btn {
+    border-radius: 5px !important;
+    padding: 3px 3px !important;
+  }
+}
+
+@media (max-width: 380px) {
+  .mode-tile .roman-btn {
+    font-size: 0.72rem !important;
+  }
+
+  .mode-tile .key-name {
+    font-size: 0.56rem !important;
+  }
+}
+
+
+/* === Mode Tile Color Reinforcement (Spoke Harmony) === */
+/* Restore stronger relationship between tile color and spoke color while keeping pad material */
+
+.mode-tile {
+  background:
+    radial-gradient(circle at 50% 12%,
+      color-mix(in srgb, var(--tile-color) 82%, rgba(255,255,255,0.12)),
+      color-mix(in srgb, var(--tile-color) 58%, rgba(0,0,0,0.62)) 45%,
+      rgba(6,6,8,0.98) 125%) !important;
+
+  border: 1px solid color-mix(in srgb, var(--tile-color) 38%, rgba(255,255,255,0.16)) !important;
+}
+

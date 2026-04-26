@@ -10,14 +10,15 @@
   --stoneB:#17181c;
   --stoneC:#2f3037;
 
-  /* Subtle accent tints (vivid yet subdued) */
-  --c-modewheel:#c43f3f;
-  --c-about:#c98a35;
-  --c-theory:#c8bb2f;
-  --c-harmonics:#3ea565;
-  --c-spheres:#2f78c8;
-  --c-shop:#5b49c6;
-  --c-contact:#a147c6;
+  /* Muted spectrum */
+  --c-modewheel:#8a3a3a;
+  --c-about:#8f6a3a;
+  --c-theory:#8f883a;
+  --c-harmonics:#3f7a57;
+  --c-spheres:#3a5f8f;
+  --c-shop:#4a3f8f;
+  --c-contact:#7a3f8f;
+
 
   --railW: 252px;
   --btnH: 60px;
@@ -531,4 +532,92 @@ a:focus, button:focus{ outline: 2px solid rgba(255,255,255,.30); outline-offset:
     font-size: 16px;
     padding: 6px 8px;
   }
+}
+
+
+/* === Rebalanced original style: keep sidebar/buttons, clean content pages === */
+/* Black page field instead of grey stone wash */
+html, body{
+  background: #000 !important;
+  background-image: none !important;
+  background-color: #000 !important;
+}
+
+/* Keep the original rail shape/frame/button styling, but remove the grey stone fill */
+.rail,
+.topbar{
+  background: transparent !important;
+  background-image: none !important;
+}
+
+/* Keep original nav button frames and typography, but remove their grey slab fill */
+.navbtn::before{
+  background:
+    linear-gradient(180deg,
+      color-mix(in srgb, var(--accent) 28%, rgba(0,0,0,0.96)),
+      color-mix(in srgb, var(--accent) 14%, rgba(0,0,0,0.98))) !important;
+}
+
+/* Standard non-wheel content pages: remove card frame, ornaments, grey fill, and bevels */
+.card,
+.card.frame-outer,
+.card.stone,
+.card .inlay{
+  background: transparent !important;
+  background-image: none !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.card.frame-outer::before,
+.card.frame-outer::after{
+  display: none !important;
+  content: none !important;
+}
+
+.card{
+  max-width: 980px;
+  padding: 0 !important;
+}
+
+.card .inlay{
+  padding: 20px !important;
+}
+
+/* Keep the wheel stage and wheel CSS as originally styled for now. */
+
+
+
+/* === Wheel page: remove frame + grey background ONLY === */
+#wheel-stage.stone,
+#wheel-stage.frame-outer {
+  background: transparent !important;
+  background-image: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  overflow: visible !important;
+}
+
+#wheel-stage.frame-outer::before,
+#wheel-stage.frame-outer::after {
+  display: none !important;
+  content: none !important;
+}
+
+#wheel-stage .inlay {
+  background: transparent !important;
+  background-image: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+
+/* === Foundation Readability Pass — softer black field === */
+/* Restores a little environmental depth without returning to the old grey stone wash. */
+html, body{
+  background:
+    radial-gradient(circle at 50% 40%, rgba(255,255,255,0.035), transparent 60%),
+    radial-gradient(circle at 20% 80%, rgba(255,255,255,0.020), transparent 70%),
+    linear-gradient(180deg, #020204 0%, #000000 100%) !important;
+  background-color: #000000 !important;
 }
