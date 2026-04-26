@@ -5418,18 +5418,126 @@ function renderKey(sel) {
     // --- Mode name ---
     const nameBtn = document.createElement('button');
     nameBtn.className = 'key-btn key-name';
-    if (detected.index >= 0 && names.length) {
-      nameBtn.textContent = names[(detected.index + idx) % names.length];
-    } else {
-      nameBtn.textContent = `Mode ${idx + 1}`;
-    }
+
+    const modeName = (detected.index >= 0 && names.length)
+      ? names[(detected.index + idx) % names.length]
+      : `Mode ${idx + 1}`;
+
+    nameBtn.dataset.modeName = modeName;
+
+    const rootSpan = document.createElement('span');
+    rootSpan.className = 'mode-root-label';
+
+    const modeSpan = document.createElement('span');
+    modeSpan.className = 'mode-name-label';
+    modeSpan.textContent = modeName;
+
+    nameBtn.appendChild(rootSpan);
+    nameBtn.appendChild(modeSpan);
+
     nameBtn.addEventListener('click', () => playModeFromDegree(idx));
 
     col.appendChild(rn);
     col.appendChild(nameBtn);
     keyRows.appendChild(tile);
   });
+
+  updateModeTileDesktopLabels(sel, detected);
 }
+
+// ---------- Desktop mode tile metadata: family header + spelled mode roots ----------
+
+function getModeFamilyDisplayName(familyName, selectedIntervals) {
+  const set = Array.from(selectedIntervals || getSelectedIntervals()).sort((a, b) => a - b);
+  const noteCount = set.length;
+
+  // detectModeFamilyAndIndex returns { family, index }, so look up familyIndex
+  // from MODE_FAMILIES rather than expecting it on the detected object.
+  const detected = detectModeFamilyAndIndex(set);
+  const resolvedFamilyName = detected?.family || familyName;
+  const familyData = MODE_FAMILIES[resolvedFamilyName] || MODE_FAMILIES[familyName];
+  const familyIndex = familyData && typeof familyData.familyIndex !== 'undefined'
+    ? familyData.familyIndex
+    : null;
+
+  // Vernacular exceptions for common/standard families.
+  if (noteCount === 7 && familyIndex === 1) return 'The Major Scale';
+  if (noteCount === 6 && familyIndex === 1) return 'The Whole-Tone Scale';
+  if (noteCount === 5 && familyIndex === 1) return 'The Pentatonic Scale';
+  if (noteCount === 8 && familyIndex === 1) return 'The Octatonic Scale';
+  if (noteCount === 12 && familyIndex === 1) return 'The Chromatic Scale';
+
+  return familyName || resolvedFamilyName || 'Custom';
+}
+
+
+function ensureModeFamilyHeader() {
+  const keyArea = document.getElementById('key-area');
+  if (!keyArea || !keyRows) return null;
+
+  let header = document.getElementById('mode-family-header');
+  if (!header) {
+    header = document.createElement('div');
+    header.id = 'mode-family-header';
+    header.innerHTML = '<div class="mode-family-header-kicker">Modes of</div><div class="mode-family-header-name"></div>';
+    keyArea.insertBefore(header, keyRows);
+  }
+  return header;
+}
+
+function updateModeTileDesktopLabels(sel, detectedInfo) {
+  const header = ensureModeFamilyHeader();
+  const detected = detectedInfo || detectModeFamilyAndIndex(sel);
+  const familyName = detected?.family || 'Custom';
+
+  const rels = Array.from(sel || getSelectedIntervals()).sort((a, b) => a - b);
+  const familyDisplayName = getModeFamilyDisplayName(familyName, rels);
+
+  if (header) {
+    const familyNameEl = header.querySelector('.mode-family-header-name');
+    if (familyNameEl) familyNameEl.textContent = familyDisplayName;
+  }
+
+  let spelled = [];
+  try {
+    spelled = spellNotesForSet(state.rootIndex, rels);
+  } catch (err) {
+    spelled = [];
+  }
+
+  const nameButtons = Array.from(document.querySelectorAll('#key-area .mode-tile .key-name'));
+  nameButtons.forEach((btn, idx) => {
+    const modeName = btn.dataset.modeName || btn.textContent.trim() || `Mode ${idx + 1}`;
+    let rootName = spelled[idx];
+
+    // Fallback if the current spelling mode cannot produce a clean label.
+    if (!rootName || rootName === 'Spelling unavailable') {
+      const deg = rels[idx] ?? 0;
+      rootName = pickNeutralName((state.rootIndex + deg) % 12);
+    }
+
+    let rootSpan = btn.querySelector('.mode-root-label');
+    let modeSpan = btn.querySelector('.mode-name-label');
+
+    if (!rootSpan || !modeSpan) {
+      btn.textContent = '';
+      rootSpan = document.createElement('span');
+      rootSpan.className = 'mode-root-label';
+      modeSpan = document.createElement('span');
+      modeSpan.className = 'mode-name-label';
+      btn.appendChild(rootSpan);
+      btn.appendChild(modeSpan);
+    }
+
+    rootSpan.textContent = rootName;
+    modeSpan.textContent = modeName;
+  });
+
+  if (typeof window.syncModeTileNameWidth === 'function') {
+    window.syncModeTileNameWidth();
+  }
+}
+
 
  // ===== Dragging and Rotation Logic (no-jump, smooth grab) =====
 
@@ -6437,6 +6545,11 @@ function playModeFromDegree(i) {
     const famSet = fam.sets[0] || setArr;
     const counts = intervalClassHistogram(famSet);
     renderHistogram(counts);
+
+    // Keep desktop mode tile roots aligned with the current spelling logic.
+    if (typeof updateModeTileDesktopLabels === 'function') {
+      updateModeTileDesktopLabels(getSelectedIntervals());
+    }
   }
 
 
@@ -6632,3 +6745,67 @@ function roman(n){
   // initial attempt
   splitKeyRowsIntoBalancedLines();
 })();
+
+
+/* === Desktop mode tile width sync ===
+   Measures the longest visible mode-name button and applies that width to all mode-name buttons.
+   Keeps colored tile wrappers intact while preserving aligned equal button widths. */
+(function setupModeTileNameWidthSync(){
+  function syncModeTileNameWidth(){
+    const keyArea = document.getElementById("key-area");
+    if (!keyArea) return;
+
+    const names = Array.from(keyArea.querySelectorAll(".mode-tile .key-name"));
+    if (!names.length) return;
+
+    // Reset first so newly shorter/longer mode families measure naturally.
+    keyArea.style.removeProperty("--modeNameButtonW");
+    names.forEach(btn => {
+      btn.style.removeProperty("width");
+      btn.style.removeProperty("minWidth");
+      btn.style.removeProperty("maxWidth");
+    });
+
+    let max = 0;
+    names.forEach(btn => {
+      const rect = btn.getBoundingClientRect();
+      const scroll = btn.scrollWidth || 0;
+      max = Math.max(max, rect.width, scroll);
+    });
+
+    // Add a little safety room so long names do not feel clipped.
+    const padded = Math.ceil(max + 4);
+    keyArea.style.setProperty("--modeNameButtonW", `${padded}px`);
+  }
+
+  function scheduleSync(){
+    requestAnimationFrame(() => {
+      syncModeTileNameWidth();
+      requestAnimationFrame(syncModeTileNameWidth);
+    });
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", scheduleSync);
+  } else {
+    scheduleSync();
+  }
+
+  window.addEventListener("resize", scheduleSync);
+
+  const keyRows = document.getElementById("key-rows");
+  if (keyRows && "MutationObserver" in window) {
+    const observer = new MutationObserver(scheduleSync);
+    observer.observe(keyRows, {
+      childList: true,
+      subtree: true,
+      characterData: true,
+      attributes: true,
+      attributeFilter: ["class", "style"]
+    });
+  }
+
+  // Expose a hook in case existing wheel code wants to call it after rerendering.
+  window.syncModeTileNameWidth = scheduleSync;
+})();
+
