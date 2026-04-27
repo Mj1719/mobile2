@@ -5454,7 +5454,6 @@ function renderKey(sel) {
   });
 
   updateModeTileDesktopLabels(sel, detected);
-  if (typeof reinforceModeTileColorFallbacks === 'function') reinforceModeTileColorFallbacks();
 }
 
 // ---------- Desktop mode tile metadata: family header + spelled mode roots ----------
@@ -5542,9 +5541,7 @@ function updateModeTileDesktopLabels(sel, detectedInfo) {
     // Tile color: use the live color position while dragging.
     const tileColor = getRotatedColor(deg);
     tile.style.setProperty('--tile-color', tileColor);
-    tile.dataset.tileColor = tileColor;
-    tile.style.backgroundColor = tileColor;
-    tile.style.backgroundImage = `radial-gradient(circle at 50% 18%, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.06) 24%, rgba(0,0,0,0) 52%), radial-gradient(circle at 50% 50%, ${tileColor} 0%, ${tileColor} 42%, rgba(8,8,10,0.96) 132%)`;
+    tile.style.background = `radial-gradient(circle at 50% 22%, ${tileColor} 0%, ${tileColor} 38%, rgba(8,8,10,0.96) 132%)`;
 
     // Roman numeral: recompute from the current live modal ordering.
     const romanBtn = tile.querySelector('.roman-btn');
@@ -7498,47 +7495,6 @@ function roman(n){
 })();
 
 
-/* === MOBILE PORTRAIT: place index/reset below mode controls === */
-/*
-  CSS ordering cannot reliably move .index-bubble here because it may live
-  inside a different parent flow from #mode-controls. This physically places
-  the new index/reset row directly below the # Notes + Mode Family controls
-  on mobile, while leaving desktop layout untouched.
-*/
-function placeIndexForMobile() {
-  const modeControls = document.getElementById('mode-controls');
-  const indexBubble = document.querySelector('.index-bubble');
-  const leftControlStack = document.getElementById('left-control-stack');
-
-  if (!modeControls || !indexBubble) return;
-
-  if (window.innerWidth < 900) {
-    // Always force it below mode controls on mobile.
-    modeControls.insertAdjacentElement('afterend', indexBubble);
-
-    // Ensure it stays visible even if earlier desktop-hide CSS has touched it.
-    indexBubble.style.display = 'block';
-    indexBubble.style.visibility = 'visible';
-    indexBubble.style.opacity = '1';
-    indexBubble.style.pointerEvents = 'auto';
-  } else {
-    // Restore desktop position.
-    if (leftControlStack && indexBubble.parentElement !== leftControlStack) {
-      leftControlStack.appendChild(indexBubble);
-    }
-
-    // Let desktop CSS resume control.
-    indexBubble.style.display = '';
-    indexBubble.style.visibility = '';
-    indexBubble.style.opacity = '';
-    indexBubble.style.pointerEvents = '';
-  }
-}
-
-placeIndexForMobile();
-window.addEventListener('resize', placeIndexForMobile);
-
-
 /* === MOBILE PORTRAIT: options gear + spelling popup v3 === */
 function ensureMobileOptionsButton() {
   const indexBubble = document.querySelector('.index-bubble');
@@ -7547,12 +7503,6 @@ function ensureMobileOptionsButton() {
   const leftControlStack = document.getElementById('left-control-stack');
 
   if (!indexRow || !panel) return;
-
-  // Remember desktop parent once so we can restore it on desktop.
-  if (!panel.dataset.desktopParentRemembered && panel.parentElement) {
-    panel.dataset.desktopParentRemembered = '1';
-    panel.dataset.desktopParentId = panel.parentElement.id || '';
-  }
 
   let optionsButton = document.getElementById('mobile-options-button');
   if (!optionsButton) {
@@ -7563,10 +7513,7 @@ function ensureMobileOptionsButton() {
     optionsButton.setAttribute('aria-expanded', 'false');
     optionsButton.textContent = '⚙';
   }
-
-  if (optionsButton.parentElement !== indexRow) {
-    indexRow.appendChild(optionsButton);
-  }
+  if (optionsButton.parentElement !== indexRow) indexRow.appendChild(optionsButton);
 
   let closeButton = document.getElementById('mobile-options-close');
   if (!closeButton) {
@@ -7576,10 +7523,7 @@ function ensureMobileOptionsButton() {
     closeButton.setAttribute('aria-label', 'Close options');
     closeButton.textContent = '×';
   }
-
-  if (closeButton.parentElement !== panel) {
-    panel.insertBefore(closeButton, panel.firstChild);
-  }
+  if (closeButton.parentElement !== panel) panel.insertBefore(closeButton, panel.firstChild);
 
   function movePanelToBodyForMobile() {
     if (window.innerWidth < 900 && panel.parentElement !== document.body) {
@@ -7595,12 +7539,8 @@ function ensureMobileOptionsButton() {
 
   function openMobileOptions() {
     if (window.innerWidth >= 900) return;
-
-    // Important: the desktop parent stack is hidden on mobile, so the panel must
-    // be moved to body before it can be displayed as a fixed popup.
     movePanelToBodyForMobile();
 
-    // Mobile popup should open fully expanded, not as the desktop drawer.
     const sipBody = document.getElementById('sip-body');
     const sipToggle = document.getElementById('sip-toggle');
     if (sipBody) sipBody.removeAttribute('hidden');
@@ -7622,11 +7562,7 @@ function ensureMobileOptionsButton() {
     optionsButton.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopPropagation();
-      if (document.body.classList.contains('mobile-options-open')) {
-        closeMobileOptions();
-      } else {
-        openMobileOptions();
-      }
+      document.body.classList.contains('mobile-options-open') ? closeMobileOptions() : openMobileOptions();
     });
     optionsButton.dataset.mobileOptionsWired = '1';
   }
@@ -7656,9 +7592,7 @@ function ensureMobileOptionsButton() {
         closeMobileOptions();
         restorePanelForDesktop();
       } else {
-        setTimeout(() => {
-          ensureMobileOptionsButton();
-        }, 0);
+        setTimeout(ensureMobileOptionsButton, 0);
       }
     });
 
@@ -7671,28 +7605,65 @@ setTimeout(ensureMobileOptionsButton, 0);
 window.addEventListener('load', ensureMobileOptionsButton);
 
 
-/* === MOBILE SAFARI: reinforce mode tile color backgrounds === */
-/*
-  iOS Safari sometimes fails the CSS color-mix tile background path.
-  This function writes a simple, Safari-safe inline fallback on each tile.
-*/
-function reinforceModeTileColorFallbacks() {
-  try {
-    document.querySelectorAll('#key-area .mode-tile').forEach(tile => {
-      const color = tile.style.getPropertyValue('--tile-color') || tile.dataset.tileColor || '#444';
-      tile.style.backgroundColor = color;
-      tile.style.backgroundImage =
-        `radial-gradient(circle at 50% 18%, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.06) 24%, rgba(0,0,0,0) 52%), ` +
-        `radial-gradient(circle at 50% 50%, ${color} 0%, ${color} 42%, rgba(8,8,10,0.96) 132%)`;
-      tile.style.backgroundRepeat = 'no-repeat';
-      tile.style.backgroundSize = '100% 100%';
-    });
-  } catch (err) {
-    console.warn('[ModeWheel] mobile tile color fallback skipped:', err);
+/* === MOBILE PORTRAIT: place index/reset below mode controls === */
+function placeIndexForMobile() {
+  const modeControls = document.getElementById('mode-controls');
+  const indexBubble = document.querySelector('.index-bubble');
+  const leftControlStack = document.getElementById('left-control-stack');
+
+  if (!modeControls || !indexBubble) return;
+
+  if (window.innerWidth < 900) {
+    modeControls.insertAdjacentElement('afterend', indexBubble);
+    indexBubble.style.display = 'block';
+    indexBubble.style.visibility = 'visible';
+    indexBubble.style.opacity = '1';
+    indexBubble.style.pointerEvents = 'auto';
+  } else {
+    if (leftControlStack && indexBubble.parentElement !== leftControlStack) {
+      leftControlStack.appendChild(indexBubble);
+    }
+    indexBubble.style.display = '';
+    indexBubble.style.visibility = '';
+    indexBubble.style.opacity = '';
+    indexBubble.style.pointerEvents = '';
   }
 }
 
-reinforceModeTileColorFallbacks();
-setTimeout(reinforceModeTileColorFallbacks, 0);
-window.addEventListener('resize', reinforceModeTileColorFallbacks);
+placeIndexForMobile();
+window.addEventListener('resize', placeIndexForMobile);
+
+
+/* === DESKTOP SAFEGUARD: cleanup mobile options artifacts === */
+/*
+  The mobile Options gear and popup close button are only for portrait/mobile.
+  On desktop, remove them from the visible UI so they cannot appear inside the
+  desktop index bubble or spelling drawer.
+*/
+function cleanupMobileOptionsArtifactsForDesktop() {
+  if (window.innerWidth < 900) return;
+
+  document.body.classList.remove('mobile-options-open');
+
+  const optionsButton = document.getElementById('mobile-options-button');
+  if (optionsButton) {
+    optionsButton.remove();
+  }
+
+  const closeButton = document.getElementById('mobile-options-close');
+  if (closeButton) {
+    closeButton.remove();
+  }
+
+  const panel = document.getElementById('scale-info-panel');
+  const leftControlStack = document.getElementById('left-control-stack');
+
+  if (panel && leftControlStack && panel.parentElement !== leftControlStack) {
+    leftControlStack.insertBefore(panel, leftControlStack.firstChild);
+  }
+}
+
+cleanupMobileOptionsArtifactsForDesktop();
+window.addEventListener('resize', cleanupMobileOptionsArtifactsForDesktop);
+window.addEventListener('load', cleanupMobileOptionsArtifactsForDesktop);
 
